@@ -1,4 +1,5 @@
 Shell = require 'shell'
+format = require 'string-format';
 conv = new (require 'showdown').Converter()
 
 module.exports = HaskellHoogle =
@@ -10,8 +11,9 @@ module.exports = HaskellHoogle =
     return editor.getLastSelection().getText()
 
   lookup: ->
+    hoogleUrlTemplate = atom.config.get('haskell-hoogle.hoogleUrl')
     text = @getSearchText()
-    url = 'https://www.haskell.org/hoogle/?mode=json&hoogle='+text+'&start=1&count=100'
+    url = format(hoogleUrlTemplate, {query: text})
     req = new XMLHttpRequest()
     req.open("GET", url, false) #FIXME: this should be async
     req.send(null)
@@ -24,3 +26,10 @@ module.exports = HaskellHoogle =
                   '<br/>'+conv.makeHtml(res.docs)+
                   '<a class="haskell-hoogle-doc-link" href="'+res.location+'">doc</a>'
         atom.notifications.addInfo(htmlRes, {dismissable: true})
+
+  config:
+    hoogleUrl:
+      title: 'Hoogle URL'
+      type: 'string'
+      description: '`{query}` will be replaced by the searched text; use `{{` and `}}` for writing curly braces.'
+      default: 'https://www.haskell.org/hoogle/?mode=json&hoogle={query}&start=1&count=100'
